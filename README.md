@@ -8,3 +8,5 @@ includes creating tokens that the package will use. For more details,
 ```
 M-x describe-variable auth-source-xoauth2-creds
 ```
+
+> Disclaimer: This is not an officially supported Google product.
