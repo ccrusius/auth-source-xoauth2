@@ -40,25 +40,19 @@
 (require 'subr-x)
 (require 'auth-source-pass)
 
-(defun auth-source-xoauth2-pass--find-match (host user port)
-  "Find password for given HOST, USER, and PORT.
-This is a wrapper around `auth-pass--find-match`, which is needed
-because the MELPA and Emacs 26.1 versions of the function accept
-a different number of arguments."
-  (cond
-   ((>= emacs-major-version 27) (auth-source-pass--find-match host user port))
-   ((>= emacs-major-version 26) (auth-source-pass--find-match host user))
-   (t (auth-source-pass--find-match host user port))))
+;;; Auth source interface and functions
 
-(defvar auth-source-xoauth2-creds 'auth-source-xoauth2-pass-creds
+(defvar auth-source-xoauth2-creds nil
   "A property list containing values for the following XOAuth2 keys:
 :token-url, :client-id, :client-secret, and :refresh-token.
 
-This can also be set to a function that, when called with HOST, USER,
-and PORT values, returns the respective property list.
+If this is set to a string, it is considered the name of a file
+containing one sexp that evaluates to the property list above.  If
+this is set to a function, it will be called with HOST, USER, and PORT
+values, and should return the respective property list.
 
-The default is a function that retrieves the values from a password-store.
-See `auth-source-xoauth2-pass-creds' for details.
+This package provides a function that retrieves the values from a
+password-store.  See `auth-source-xoauth2-pass-creds' for details.
 
 If you are using this to authenticate to Google, the values can be
 obtained through the following procedure (note that Google changes
@@ -86,19 +80,6 @@ This should get you all the values but for the refresh token.  For that one:
 You should now have all the required values (the :token-url value should
 be \"https://accounts.google.com/o/oauth2/token\").")
 
-(defun auth-source-xoauth2--url-post (url data)
-  "Post DATA to the given URL, and return the JSON-parsed reply."
-  (let ((url-request-method "POST")
-        (url-request-data data)
-        (url-request-extra-headers
-         '(("Content-Type" . "application/x-www-form-urlencoded"))))
-    (with-current-buffer (url-retrieve-synchronously url)
-      (goto-char (point-min))
-      (when (search-forward-regexp "^$" nil t)
-        (let ((data (json-read)))
-          (kill-buffer (current-buffer))
-          data)))))
-
 (cl-defun auth-source-xoauth2-search (&rest spec
                                             &key backend type host user port
                                             &allow-other-keys)
@@ -120,9 +101,13 @@ See `auth-source-search' for details on SPEC."
 (cl-defun auth-source-xoauth2--search (spec type host user port)
   "Given a property list SPEC, return search matches from the :backend.
 See `auth-source-search' for details on SPEC."
-  (when-let ((token (if (functionp auth-source-xoauth2-creds)
-                        (funcall auth-source-xoauth2-creds host user port)
-                      auth-source-xoauth2-creds)))
+  (when-let ((token
+              (cond
+               ((functionp auth-source-xoauth2-creds)
+                (funcall auth-source-xoauth2-creds host user port))
+               ((stringp auth-source-xoauth2-creds)
+                (auth-source-xoauth2--file-creds))
+               (t auth-source-xoauth2-creds))))
     (when-let ((token-url (plist-get token :token-url))
                (client-id (plist-get token :client-id))
                (client-secret (plist-get token :client-secret))
@@ -136,15 +121,18 @@ See `auth-source-search' for details on SPEC."
                                              "&grant_type=refresh_token")))))
         (list :host host :port port :user user :secret secret)))))
 
-(cl-defun smtpmail--try-auth-xoauth2-method (process user password)
-  "Authenticate to SMTP PROCESS with USER and PASSWORD via XOAuth2."
-  (smtpmail-command-or-throw
-   process
-   (concat "AUTH XOAUTH2 "
-           (base64-encode-string
-            (concat "user=" user "\1auth=Bearer " password "\1\1")
-            t))
-   235))
+(defun auth-source-xoauth2--url-post (url data)
+  "Post DATA to the given URL, and return the JSON-parsed reply."
+  (let ((url-request-method "POST")
+        (url-request-data data)
+        (url-request-extra-headers
+         '(("Content-Type" . "application/x-www-form-urlencoded"))))
+    (with-current-buffer (url-retrieve-synchronously url)
+      (goto-char (point-min))
+      (when (search-forward-regexp "^$" nil t)
+        (let ((data (json-read)))
+          (kill-buffer (current-buffer))
+          data)))))
 
 ;;;###autoload
 (defun auth-source-xoauth2-enable ()
@@ -190,6 +178,40 @@ See `auth-source-search' for details on SPEC."
 
 (advice-add 'auth-source-backend-parse :before-until #'auth-source-xoauth2-backend-parse)
 ;;(add-hook 'auth-source-backend-parser-functions #'auth-source-xoauth2-backend-parse)
+
+;;; File sub-backend
+
+(defun auth-source-xoauth2--file-creds ()
+  "Load the file specified by `auth-source-xoauth2-creds`."
+  (when (not (string= "gpg" (file-name-extension auth-source-xoauth2-creds)))
+    (error "The auth-source-xoauth2-creds file must be GPG encrypted"))
+  (eval (with-temp-buffer
+          (insert-file-contents auth-source-xoauth2-creds)
+          (goto-char (point-min))
+          (read (current-buffer)))
+        (buffer-string)))
+
+;;; Password-store sub-backend
+
+(defun auth-source-xoauth2-pass--find-match (host user port)
+  "Find password for given HOST, USER, and PORT.
+This is a wrapper around `auth-pass--find-match`, which is needed
+because the MELPA and Emacs 26.1 versions of the function accept
+a different number of arguments."
+  (cond
+   ((>= emacs-major-version 27) (auth-source-pass--find-match host user port))
+   ((>= emacs-major-version 26) (auth-source-pass--find-match host user))
+   (t (auth-source-pass--find-match host user port))))
+
+(cl-defun smtpmail--try-auth-xoauth2-method (process user password)
+  "Authenticate to SMTP PROCESS with USER and PASSWORD via XOAuth2."
+  (smtpmail-command-or-throw
+   process
+   (concat "AUTH XOAUTH2 "
+           (base64-encode-string
+            (concat "user=" user "\1auth=Bearer " password "\1\1")
+            t))
+   235))
 
 (defun auth-source-xoauth2--pass-get (key entry)
   "Retrieve KEY from password-store ENTRY."
