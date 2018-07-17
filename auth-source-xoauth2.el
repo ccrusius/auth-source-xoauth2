@@ -106,7 +106,7 @@ See `auth-source-search' for details on SPEC."
                ((functionp auth-source-xoauth2-creds)
                 (funcall auth-source-xoauth2-creds host user port))
                ((stringp auth-source-xoauth2-creds)
-                (auth-source-xoauth2--file-creds))
+                (auth-source-xoauth2--file-creds auth-source-xoauth2-creds))
                (t auth-source-xoauth2-creds))))
     (when-let ((token-url (plist-get token :token-url))
                (client-id (plist-get token :client-id))
@@ -181,12 +181,12 @@ See `auth-source-search' for details on SPEC."
 
 ;;; File sub-backend
 
-(defun auth-source-xoauth2--file-creds ()
-  "Load the file specified by `auth-source-xoauth2-creds`."
+(defun auth-source-xoauth2--file-creds (file)
+  "Load FILE and evaluate it."
   (when (not (string= "gpg" (file-name-extension auth-source-xoauth2-creds)))
     (error "The auth-source-xoauth2-creds file must be GPG encrypted"))
   (eval (with-temp-buffer
-          (insert-file-contents auth-source-xoauth2-creds)
+          (insert-file-contents file)
           (goto-char (point-min))
           (read (current-buffer)))
         (buffer-string)))
