@@ -47,9 +47,27 @@
 :token-url, :client-id, :client-secret, and :refresh-token.
 
 If this is set to a string, it is considered the name of a file
-containing one sexp that evaluates to the property list above.  If
-this is set to a function, it will be called with HOST, USER, and PORT
-values, and should return the respective property list.
+containing one sexp that evaluates to either the property list above,
+or to a hash table containing (HOST USER PORT) keys mapping to
+property lists as above. Note that the hash table /must/ have its
+`:test' property set to `equal'. Example:
+
+    #s(hash-table size 2 test equal
+       data ((\"host1.com\" \"user1\" \"port1\")
+             (:token-url \"token-url-1\"
+              :client-id \"client-id-1\"
+              :client-secret \"client-secret-1\"
+              :refresh-token \"refresh-token-1\")
+
+             (\"host2.com\" \"user2\" \"port2\")
+             (
+              :token-url \"token-url-2\"
+              :client-id \"client-id-2\"
+              :client-secret \"client-secret-2\"
+              :refresh-token \"refresh-token-2\")))
+
+If this is set to a function, it will be called with HOST, USER, and
+PORT values, and should return the respective property list.
 
 This package provides a function that retrieves the values from a
 password-store.  See `auth-source-xoauth2-pass-creds' for details.
@@ -106,7 +124,8 @@ See `auth-source-search' for details on SPEC."
                ((functionp auth-source-xoauth2-creds)
                 (funcall auth-source-xoauth2-creds host user port))
                ((stringp auth-source-xoauth2-creds)
-                (auth-source-xoauth2--file-creds auth-source-xoauth2-creds))
+                (auth-source-xoauth2--file-creds
+                 auth-source-xoauth2-creds host user port))
                (t auth-source-xoauth2-creds))))
     (when-let ((token-url (plist-get token :token-url))
                (client-id (plist-get token :client-id))
@@ -181,19 +200,25 @@ See `auth-source-search' for details on SPEC."
 
 ;;; File sub-backend
 
-(defun auth-source-xoauth2--file-creds (file)
-  "Load FILE and evaluate it."
+(defun auth-source-xoauth2--file-creds (file host user port)
+  "Load FILE and evaluate it, matching entries to HOST, USER, and PORT."
   (when (not (string= "gpg" (file-name-extension file)))
     (error "The auth-source-xoauth2-creds file must be GPG encrypted"))
-  (condition-case err
-      (eval (with-temp-buffer
-              (insert-file-contents file)
-              (goto-char (point-min))
-              (read (current-buffer)))
-            (buffer-string))
-    (error
-     (message "auth-source-xoauth2: %s" (error-message-string err))
-     nil)))
+  (when-let
+      ((creds (condition-case err
+                  (eval (with-temp-buffer
+                          (insert-file-contents file)
+                          (goto-char (point-min))
+                          (read (current-buffer)))
+                        (buffer-string))
+                (error
+                 (message "auth-source-xoauth2: %s" (error-message-string err))
+                 nil))))
+    (cond
+     ((hash-table-p creds)
+      (message "Searching hash table for (%S %S %S)" host user port)
+      (gethash `(,host ,user ,port) creds))
+     (creds))))
 
 ;;; Password-store sub-backend
 
