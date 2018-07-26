@@ -183,7 +183,7 @@ See `auth-source-search' for details on SPEC."
 
 (defun auth-source-xoauth2--file-creds (file)
   "Load FILE and evaluate it."
-  (when (not (string= "gpg" (file-name-extension auth-source-xoauth2-creds)))
+  (when (not (string= "gpg" (file-name-extension file)))
     (error "The auth-source-xoauth2-creds file must be GPG encrypted"))
   (eval (with-temp-buffer
           (insert-file-contents file)
