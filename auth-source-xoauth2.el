@@ -185,11 +185,15 @@ See `auth-source-search' for details on SPEC."
   "Load FILE and evaluate it."
   (when (not (string= "gpg" (file-name-extension file)))
     (error "The auth-source-xoauth2-creds file must be GPG encrypted"))
-  (eval (with-temp-buffer
-          (insert-file-contents file)
-          (goto-char (point-min))
-          (read (current-buffer)))
-        (buffer-string)))
+  (condition-case err
+      (eval (with-temp-buffer
+              (insert-file-contents file)
+              (goto-char (point-min))
+              (read (current-buffer)))
+            (buffer-string))
+    (error
+     (message "auth-source-xoauth2: %s" (error-message-string err))
+     nil)))
 
 ;;; Password-store sub-backend
 
