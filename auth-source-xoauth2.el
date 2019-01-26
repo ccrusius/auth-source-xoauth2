@@ -98,6 +98,12 @@ This should get you all the values but for the refresh token.  For that one:
 You should now have all the required values (the :token-url value should
 be \"https://accounts.google.com/o/oauth2/token\").")
 
+(defvar auth-source-xoauth2-use-curl nil
+  "Whether to use cURL instead of Emacs' built-in `url-retrieve-synchronously'.
+If, for whatever reason, the XOAuth2 tokens can not be retrieved using
+Emacs' own `url-retrieve-synchronously', setting this variable to `t'
+will make the package try to call cURL instead.")
+
 (cl-defun auth-source-xoauth2-search (&rest spec
                                             &key backend type host user port
                                             &allow-other-keys)
@@ -142,16 +148,26 @@ See `auth-source-search' for details on SPEC."
 
 (defun auth-source-xoauth2--url-post (url data)
   "Post DATA to the given URL, and return the JSON-parsed reply."
-  (let ((url-request-method "POST")
-        (url-request-data data)
-        (url-request-extra-headers
-         '(("Content-Type" . "application/x-www-form-urlencoded"))))
-    (with-current-buffer (url-retrieve-synchronously url)
-      (goto-char (point-min))
-      (when (search-forward-regexp "^$" nil t)
-        (let ((data (json-read)))
-          (kill-buffer (current-buffer))
-          data)))))
+  (if auth-source-xoauth2-use-curl
+      (with-temp-buffer
+        (call-process "curl" nil t nil
+                      "--silent"
+                      "--request" "POST"
+                      "--data" data
+                      "--header" "Content-Type:application/x-www-form-urlencoded"
+                      url)
+        (goto-char (point-min))
+        (json-read))
+    (let ((url-request-method "POST")
+          (url-request-data data)
+          (url-request-extra-headers
+           '(("Content-Type" . "application/x-www-form-urlencoded"))))
+      (with-current-buffer (url-retrieve-synchronously url)
+        (goto-char (point-min))
+        (when (search-forward-regexp "^$" nil t)
+          (let ((data (json-read)))
+            (kill-buffer (current-buffer))
+            data))))))
 
 ;;;###autoload
 (defun auth-source-xoauth2-enable ()
