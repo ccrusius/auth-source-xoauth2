@@ -226,7 +226,7 @@ See `auth-source-search' for details on SPEC."
                           (insert-file-contents file)
                           (goto-char (point-min))
                           (read (current-buffer)))
-                        (buffer-string))
+                        t)
                 (error
                  (message "auth-source-xoauth2: %s" (error-message-string err))
                  nil))))
