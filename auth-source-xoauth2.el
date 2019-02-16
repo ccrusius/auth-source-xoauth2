@@ -229,7 +229,7 @@ See `auth-source-search' for details on SPEC."
                         (buffer-string))
                 (error
                  "Error parsing contents of %s: %s"
-                 file (error-message-string err))))))
+                 file (error-message-string err)))))
     (cond
      ((hash-table-p creds)
       (message "Searching hash table for (%S %S %S)" host user port)
