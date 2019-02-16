@@ -228,8 +228,8 @@ See `auth-source-search' for details on SPEC."
                           (read (current-buffer)))
                         (buffer-string))
                 (error
-                 (message "auth-source-xoauth2: %s" (error-message-string err))
-                 nil))))
+                 "Error parsing contents of %s: %s"
+                 file (error-message-string err))))))
     (cond
      ((hash-table-p creds)
       (message "Searching hash table for (%S %S %S)" host user port)
