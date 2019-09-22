@@ -17,7 +17,7 @@
 ;; Author: Cesar Crusius <ccrusius@google.com>
 ;; URL: https://github.com/ccrusius/auth-source-xoauth2
 ;; Version: 1.0.0
-;; Package-Requires: ((emacs "25"))
+;; Package-Requires: ((emacs "25") (auth-source-pass "4.0.1"))
 
 ;; This file is not part of GNU Emacs.
 
