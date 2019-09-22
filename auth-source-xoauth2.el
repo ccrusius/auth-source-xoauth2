@@ -15,10 +15,9 @@
 ;; limitations under the License.
 
 ;; Author: Cesar Crusius <ccrusius@google.com>
+;; URL: https://github.com/ccrusius/auth-source-xoauth2
 ;; Version: 1.0.0
-;; Package-Requires: ((emacs "24.4"))
-;; Created: 06 Jan 2018
-;; Keywords: gmail xoauth2 auth-source username password login
+;; Package-Requires: ((emacs "25"))
 
 ;; This file is not part of GNU Emacs.
 
@@ -190,12 +189,12 @@ See `auth-source-search' for details on SPEC."
    ((>= emacs-major-version 27)
     (cl-defmethod smtpmail-try-auth-method
       (process (_mech (eql xoauth2)) user password)
-      (smtpmail--try-auth-xoauth2-method process user password)))
+      (auth-source-xoauth2--smtpmail-auth-method process user password)))
    (t
     (advice-add 'smtpmail-try-auth-method :around
                 (lambda (fn process mech user password)
                   (if (eq mech 'xoauth2)
-                      (smtpmail--try-auth-xoauth2-method process user password)
+                      (auth-source-xoauth2--smtpmail-auth-method process user password)
                     (funcall fn process mech user password)))))))
 
 (defvar auth-source-xoauth2-backend
@@ -248,7 +247,7 @@ a different number of arguments."
    ((>= emacs-major-version 26) `(auth-source-pass--find-match ,host ,user))
    (t `(auth-source-pass--find-match ,host ,user ,port))))
 
-(cl-defun smtpmail--try-auth-xoauth2-method (process user password)
+(cl-defun auth-source-xoauth2--smtpmail-auth-method (process user password)
   "Authenticate to SMTP PROCESS with USER and PASSWORD via XOAuth2."
   (smtpmail-command-or-throw
    process
