@@ -117,13 +117,12 @@ See `auth-source-search' for details on SPEC."
       (dolist (host hosts)
         (dolist (port ports)
           (let ((match (auth-source-xoauth2--search
-                        spec type host user port)))
+                        host user port)))
             (when match
               (throw 'match `(,match)))))))))
 
-(cl-defun auth-source-xoauth2--search (spec type host user port)
-  "Given a property list SPEC, return search matches from the :backend.
-See `auth-source-search' for details on SPEC."
+(cl-defun auth-source-xoauth2--search (host user port)
+  "Get the XOAuth2 authentication data for the given HOST, USER, and PORT."
   (when-let ((token
               (cond
                ((functionp auth-source-xoauth2-creds)
