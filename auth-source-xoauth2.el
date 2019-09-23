@@ -1,4 +1,4 @@
-;;; auth-source-xoauth2.el --- Integrate auth-source with XOAUTH2  -*- lexical-binding: t; -*-
+;;; auth-source-xoauth2.el --- Integrate auth-source with XOAUTH2
 
 ;; Copyright 2018 Google LLC
 ;;
