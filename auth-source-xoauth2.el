@@ -39,6 +39,10 @@
 (require 'subr-x)
 (require 'auth-source-pass)
 
+(autoload 'nnimap-capability "nnimap")
+(autoload 'nnimap-command "nnimap")
+(autoload 'smtpmail-command-or-throw "smtpmail")
+
 ;;; Auth source interface and functions
 
 (defvar auth-source-xoauth2-creds nil
@@ -210,7 +214,6 @@ See `auth-source-search' for details on SPEC."
     (auth-source-backend-parse-parameters entry auth-source-xoauth2-backend)))
 
 (advice-add 'auth-source-backend-parse :before-until #'auth-source-xoauth2-backend-parse)
-;;(add-hook 'auth-source-backend-parser-functions #'auth-source-xoauth2-backend-parse)
 
 ;;; File sub-backend
 
@@ -239,12 +242,19 @@ See `auth-source-search' for details on SPEC."
 (defmacro auth-source-xoauth2-pass--find-match (host user port)
   "Find password for given HOST, USER, and PORT.
 This is a wrapper around `auth-pass--find-match`, which is needed
-because the MELPA and Emacs 26.1 versions of the function accept
+because the MELPA and Emacs 26 versions of the function accept
 a different number of arguments."
-  (cond
-   ((>= emacs-major-version 27) `(auth-source-pass--find-match ,host ,user ,port))
-   ((>= emacs-major-version 26) `(auth-source-pass--find-match ,host ,user))
-   (t `(auth-source-pass--find-match ,host ,user ,port))))
+  (let* ((nargs
+          (cond
+           ((fboundp 'func-arity) (car (func-arity #'auth-source-pass--find-match)))
+           ((>= emacs-major-version 26) 2)
+           (t 3)))
+         (args
+          (cond
+           ((= nargs 3) `(,host ,user ,port))
+           ((= nargs 2) `(,host ,user))
+           (t (error "Incompatible auth-source-pass package detected")))))
+    `(auth-source-pass--find-match ,@args)))
 
 (cl-defun auth-source-xoauth2--smtpmail-auth-method (process user password)
   "Authenticate to SMTP PROCESS with USER and PASSWORD via XOAuth2."
