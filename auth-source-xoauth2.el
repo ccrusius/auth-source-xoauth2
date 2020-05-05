@@ -6,7 +6,7 @@
 ;; you may not use this file except in compliance with the License.
 ;; You may obtain a copy of the License at
 ;;
-;;    http://www.apache.org/licenses/LICENSE-2.0
+;;    https://www.apache.org/licenses/LICENSE-2.0
 ;;
 ;; Unless required by applicable law or agreed to in writing, software
 ;; distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,7 +17,7 @@
 ;; Author: Cesar Crusius <ccrusius@google.com>
 ;; URL: https://github.com/ccrusius/auth-source-xoauth2
 ;; Version: 1.0.0
-;; Package-Requires: ((emacs "25") (auth-source-pass "4.0.1"))
+;; Package-Requires: ((emacs "25.1"))
 
 ;; This file is not part of GNU Emacs.
 
@@ -37,11 +37,14 @@
 (require 'json)
 (require 'seq)
 (require 'subr-x)
-(require 'auth-source-pass)
 
+(autoload 'auth-source-pass-get "auth-source-pass")
+(autoload 'auth-source-pass--find-match "auth-source-pass")
 (autoload 'nnimap-capability "nnimap")
 (autoload 'nnimap-command "nnimap")
+(autoload 'nnimap-login "nnimap")
 (autoload 'smtpmail-command-or-throw "smtpmail")
+(defvar nnimap-authenticator)
 
 ;;; Auth source interface and functions
 
@@ -52,8 +55,8 @@
 If this is set to a string, it is considered the name of a file
 containing one sexp that evaluates to either the property list above,
 or to a hash table containing (HOST USER PORT) keys mapping to
-property lists as above. Note that the hash table /must/ have its
-`:test' property set to `equal'. Example:
+property lists as above.  Note that the hash table /must/ have its
+`:test' property set to `equal'.  Example:
 
     #s(hash-table size 2 test equal
        data ((\"host1.com\" \"user1\" \"port1\")
@@ -104,7 +107,7 @@ be \"https://accounts.google.com/o/oauth2/token\").")
 (defvar auth-source-xoauth2-use-curl nil
   "Whether to use cURL instead of Emacs' built-in `url-retrieve-synchronously'.
 If, for whatever reason, the XOAuth2 tokens can not be retrieved using
-Emacs' own `url-retrieve-synchronously', setting this variable to `t'
+Emacs' own `url-retrieve-synchronously', setting this variable to t
 will make the package try to call cURL instead.")
 
 (cl-defun auth-source-xoauth2-search (&rest spec
@@ -176,7 +179,7 @@ See `auth-source-search' for details on SPEC."
   "Enable auth-source-xoauth2."
   (add-to-list 'auth-sources 'xoauth2)
   ;; Add functionality to nnimap-login
-  (advice-add 'nnimap-login :around
+  (advice-add #'nnimap-login :around
               (lambda (fn user password)
                 (if (and (eq nnimap-authenticator 'xoauth2)
                          (nnimap-capability "AUTH=XOAUTH2")
@@ -194,7 +197,7 @@ See `auth-source-search' for details on SPEC."
       (process (_mech (eql xoauth2)) user password)
       (auth-source-xoauth2--smtpmail-auth-method process user password)))
    (t
-    (advice-add 'smtpmail-try-auth-method :around
+    (advice-add #'smtpmail-try-auth-method :around
                 (lambda (fn process mech user password)
                   (if (eq mech 'xoauth2)
                       (auth-source-xoauth2--smtpmail-auth-method process user password)
@@ -219,7 +222,7 @@ See `auth-source-search' for details on SPEC."
 
 (defun auth-source-xoauth2--file-creds (file host user port)
   "Load FILE and evaluate it, matching entries to HOST, USER, and PORT."
-  (when (not (string= "gpg" (file-name-extension file)))
+  (unless (string= "gpg" (file-name-extension file))
     (error "The auth-source-xoauth2-creds file must be GPG encrypted"))
   (when-let
       ((creds (condition-case err
@@ -275,7 +278,7 @@ a different number of arguments."
 (defun auth-source-xoauth2-pass-creds (host user port)
   "Retrieve a XOAUTH2 access token using `auth-source-pass'.
 This function retrieve a password-store entry matching HOST, USER, and
-PORT. This entry should contain the following key-value pairs:
+PORT.  This entry should contain the following key-value pairs:
 
 xoauth2_token_url: <value>
 xoauth2_client_id: <value>
