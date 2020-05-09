@@ -17,7 +17,7 @@
 ;; Author: Cesar Crusius <ccrusius@google.com>
 ;; URL: https://github.com/ccrusius/auth-source-xoauth2
 ;; Version: 1.0.0
-;; Package-Requires: ((emacs "25.1"))
+;; Package-Requires: ((emacs "26.1"))
 
 ;; This file is not part of GNU Emacs.
 
@@ -37,9 +37,8 @@
 (require 'json)
 (require 'seq)
 (require 'subr-x)
+(require 'auth-source-pass nil t)
 
-(autoload 'auth-source-pass-get "auth-source-pass")
-(autoload 'auth-source-pass--find-match "auth-source-pass")
 (autoload 'nnimap-capability "nnimap")
 (autoload 'nnimap-command "nnimap")
 (autoload 'nnimap-login "nnimap")
