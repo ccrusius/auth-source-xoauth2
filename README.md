@@ -1,4 +1,5 @@
-# auth-source-xoauth2
+# auth-source-xoauth2 [![MELPA](http://melpa.org/packages/auth-source-xoauth2-badge.svg)](http://melpa.org/#/auth-source-xoauth2)
+
 
 This package adds `XOAuth2` authentication capabilities to `auth-source`.
 
