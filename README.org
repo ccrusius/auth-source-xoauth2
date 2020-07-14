@@ -1,0 +1,45 @@
+#+TITLE: auth-source-xoauth2
+#+AUTHOR: Cesar Crusius
+#+OPTIONS: num:nil
+
+[[http://melpa.org/#/auth-source-xoauth2][http://melpa.org/packages/auth-source-xoauth2-badge.svg]]
+
+This package adds =XOAuth2= authentication capabilities to ~auth-source~.
+
+This integration requires some preliminary work on the users' part, which
+includes creating tokens that the package will use. For more details,
+
+#+BEGIN_EXAMPLE
+M-x describe-variable auth-source-xoauth2-creds
+#+END_EXAMPLE
+
+Note: This package /does/ work with Emacs 25.1, even though it requires 26.1 in
+the package description. That requirement is necessary in order to silence
+linter errors. If using Emacs 25.1, the ~auth-source-pass~ package is optional.
+
+#+BEGIN_NOTE
+Disclaimer: This is not an officially supported Google product.
+#+END_NOTE
+
+* Debugging
+
+If things are not working, the first thing to do is probably to try
+and get a refresh token manually. This can be done with =curl= as
+follows (replace the values with your particular ones, and remember to
+quote whatever needs quoting):
+
+#+BEGIN_SRC shell
+curl -X POST \
+  '<token-url>&client_id=<client-id>&client_secret=<client-secret>&refresh_token=<refresh-token>&grant_type=refresh_token'
+#+END_SRC
+
+This should get you a reply that includes an access token. If it
+doesn't, failures will hopefully include error messages that tell you
+what to do. In the following case, you need to re-generate the refresh token:
+
+#+BEGIN_EXAMPLE
+{
+  "error": "invalid_grant",
+  "error_description": "Token has been expired or revoked."
+}
+#+END_EXAMPLE
