@@ -175,7 +175,13 @@ See `auth-source-search' for details on SPEC."
 
 ;;;###autoload
 (defun auth-source-xoauth2-enable ()
-  "Enable auth-source-xoauth2."
+  "Enable auth-source-xoauth2.
+
+This function installs hooks that allow the use of a `xoauth2' authenticator
+with `nnimap' and `smtpmail'.  To use this with other services, similar hooks
+may have to be written to add the necessary protocol handling code to those
+services.  If you write such a hook, please consider sending it for inclusion
+in this package."
   (add-to-list 'auth-sources 'xoauth2)
   ;; Add functionality to nnimap-login
   (advice-add #'nnimap-login :around

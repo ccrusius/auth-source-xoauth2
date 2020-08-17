@@ -13,6 +13,24 @@ includes creating tokens that the package will use. For more details,
 M-x describe-variable auth-source-xoauth2-creds
 #+END_EXAMPLE
 
+Once all tokens are obtained, adding
+
+#+BEGIN_EXAMPLE
+(auth-source-xoauth2-enable)
+#+END_EXAMPLE
+
+to your configuration will enable =XOAuth2= mechanisms in both IMAP and SNMP.
+For more details, see
+
+#+BEGIN_EXAMPLE
+M-x describe-function auth-source-xoauth2-enable
+#+END_EXAMPLE
+
+If you want to use the package with other services, the
+~auth-source-xoauth2-enable~ function will probably have to be modified to add
+the necessary protocol compatibility hooks: the existing contents should serve
+as a guide, and I would be happy to include contributions in this package.
+
 Note: This package /does/ work with Emacs 25.1, even though it requires 26.1 in
 the package description. That requirement is necessary in order to silence
 linter errors. If using Emacs 25.1, the ~auth-source-pass~ package is optional.
