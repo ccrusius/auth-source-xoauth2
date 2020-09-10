@@ -148,6 +148,12 @@ See `auth-source-search' for details on SPEC."
                                              "&client_secret=" client-secret
                                              "&refresh_token=" refresh-token
                                              "&grant_type=refresh_token")))))
+        ;; We log this secret in plain text because it is both a
+        ;; temporary secret, and one that can not be memorized on
+        ;; sight. Anybody that can copy this secret already has access
+        ;; to the computer.
+        (auth-source-do-debug "XOAUTH2 access token (user=%s host=%s): %s"
+                              user host secret)
         (list :host host :port port :user user :secret secret)))))
 
 (defun auth-source-xoauth2--url-post (url data)
@@ -241,7 +247,8 @@ in this package."
                  file (error-message-string err)))))
     (cond
      ((hash-table-p creds)
-      (message "Searching hash table for (%S %S %S)" host user port)
+      (auth-source-do-debug
+       "Searching hash table for (%S %S %S)" host user port)
       (gethash `(,host ,user ,port) creds))
      (creds))))
 
