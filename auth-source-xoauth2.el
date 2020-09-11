@@ -254,22 +254,15 @@ in this package."
 
 ;;; Password-store sub-backend
 
-(defmacro auth-source-xoauth2-pass--find-match (host user port)
+(cl-defun auth-source-xoauth2-pass--find-match (host user port)
   "Find password for given HOST, USER, and PORT.
 This is a wrapper around `auth-pass--find-match`, which is needed
 because the MELPA and Emacs 26 versions of the function accept
 a different number of arguments."
-  (let* ((nargs
-          (cond
-           ((fboundp 'func-arity) (car (func-arity #'auth-source-pass--find-match)))
-           ((>= emacs-major-version 26) 2)
-           (t 3)))
-         (args
-          (cond
-           ((= nargs 3) `(,host ,user ,port))
-           ((= nargs 2) `(,host ,user))
-           (t (error "Incompatible auth-source-pass package detected")))))
-    `(auth-source-pass--find-match ,@args)))
+  (condition-case nil
+      (auth-source-pass--find-match host user port)
+    (wrong-number-of-arguments
+     (auth-source-pass--find-match host user))))
 
 (cl-defun auth-source-xoauth2--smtpmail-auth-method (process user password)
   "Authenticate to SMTP PROCESS with USER and PASSWORD via XOAuth2."
