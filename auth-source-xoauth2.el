@@ -204,6 +204,8 @@ in this package."
   ;; Add the functionality to smtpmail-try-auth-method
   (cond
    ((>= emacs-major-version 27)
+    (with-eval-after-load 'smtpmail
+      (add-to-list 'smtpmail-auth-supported 'xoauth2))
     (cl-defmethod smtpmail-try-auth-method
       (process (_mech (eql xoauth2)) user password)
       (auth-source-xoauth2--smtpmail-auth-method process user password)))
