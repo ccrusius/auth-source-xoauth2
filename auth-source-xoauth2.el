@@ -283,8 +283,12 @@ a different number of arguments."
    235))
 
 (defun auth-source-xoauth2--pass-get (key entry)
-  "Retrieve KEY from password-store ENTRY."
-  (let ((ret (auth-source-pass-get key entry)))
+  "Retrieve KEY from password-store ENTRY.
+ENTRY can be either a string specifying the password store entry name
+or an association list containing the pre-parsed the entry data."
+  (let ((ret (cond
+              ((stringp entry) (auth-source-pass-get key entry))
+              ((listp entry) (cdr (assoc key entry))))))
     (or ret (message "Missing XOAuth2 entry value for '%s'" key))
     ret))
 
