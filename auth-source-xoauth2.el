@@ -79,7 +79,7 @@ password-store.  See `auth-source-xoauth2-pass-creds' for details.
 
 If you are using this to authenticate to Google, the values can be
 obtained through the following procedure (note that Google changes
-this procedure somewhat frequently, so the steps may be slightly
+this procedure every now and then, so the steps may be slightly
 different):
 
 1. Go to the developer console, https://console.developers.google.com/project
@@ -92,16 +92,22 @@ different):
 
 This should get you all the values but for the refresh token.  For that one:
 
-1. Clone the https://github.com/google/gmail-oauth2-tools repository
-2. Execute the following command in the cloned repository:
+1. Install the Go development tools (from https://go.dev).
+2. Clone the https://github.com/ccrusius/auth-source-xoauth2 repository.
+3. Execute the following command in the cloned repository:
 
-   python2.7 python/oauth2.py
-     --generate_oauth2_token \
-     --client_id=<client id from previous steps> \
-     --client_secret=<client secret from previous steps>
+   cd google-oauth
+   make
+   ./oauth -client_id <client id from previous steps> \
+           -client_secret <client secret from previous steps>
 
-You should now have all the required values (the :token-url value should
-be \"https://accounts.google.com/o/oauth2/token\").")
+4. Visit the URL the tool will print on the console. The page will ask you
+   for the permissions needed to access your Google acount.
+
+5. Once you give approval, the refresh token will be printed by the tool in
+   the terminal. You should now have all the required values (the
+   :token-url value should be
+   \"https://accounts.google.com/o/oauth2/token\").")
 
 (defvar auth-source-xoauth2-use-curl nil
   "Whether to use cURL instead of Emacs' built-in `url-retrieve-synchronously'.
