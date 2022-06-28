@@ -37,6 +37,7 @@
 (require 'json)
 (require 'seq)
 (require 'subr-x)
+(require 'smtpmail)
 (require 'auth-source-pass nil t)
 
 (autoload 'nnimap-capability "nnimap")
@@ -101,11 +102,11 @@ This should get you all the values but for the refresh token.  For that one:
    ./oauth -client_id <client id from previous steps> \
            -client_secret <client secret from previous steps>
 
-4. Visit the URL the tool will print on the console. The page will ask you
+4. Visit the URL the tool will print on the console.  The page will ask you
    for the permissions needed to access your Google acount.
 
 5. Once you give approval, the refresh token will be printed by the tool in
-   the terminal. You should now have all the required values (the
+   the terminal.  You should now have all the required values (the
    :token-url value should be
    \"https://accounts.google.com/o/oauth2/token\").")
 
@@ -118,7 +119,7 @@ will make the package try to call cURL instead.")
 (cl-defun auth-source-xoauth2-search (&rest spec
                                             &key backend type host user port
                                             &allow-other-keys)
-  "Given a property list SPEC, return search matches from the :backend.
+  "Given a property list SPEC, return search matches from the :BACKEND.
 See `auth-source-search' for details on SPEC."
   ;; just in case, check that the type is correct (null or same as the backend)
   (cl-assert (or (null type) (eq type (oref backend type)))
@@ -208,10 +209,9 @@ in this package."
                               t)))
                   (funcall fn user password))))
   ;; Add the functionality to smtpmail-try-auth-method
+  (add-to-list 'smtpmail-auth-supported 'xoauth2)
   (cond
    ((>= emacs-major-version 27)
-    (with-eval-after-load 'smtpmail
-      (add-to-list 'smtpmail-auth-supported 'xoauth2))
     (cl-defmethod smtpmail-try-auth-method
       (process (_mech (eql xoauth2)) user password)
       (auth-source-xoauth2--smtpmail-auth-method process user password)))
