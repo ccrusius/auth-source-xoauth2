@@ -5,11 +5,11 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
 	"flag"
 	"fmt"
 	"log"
 	"math/big"
-	"crypto/rand"
 	"net/http"
 	"os"
 	"strings"
@@ -94,5 +94,8 @@ func (c Comma) Set(s string) error {
 }
 
 func (c Comma) String() string {
+	if c.Var == nil {
+		return ""
+	}
 	return strings.Join(*c.Var, ",")
 }
