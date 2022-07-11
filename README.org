@@ -19,7 +19,7 @@ Once all tokens are obtained, adding
 (auth-source-xoauth2-enable)
 #+END_EXAMPLE
 
-to your configuration will enable =XOAuth2= mechanisms in both IMAP and SNMP.
+to your configuration will enable =XOAuth2= mechanisms in both IMAP and SMTP.
 For more details, see
 
 #+BEGIN_EXAMPLE
