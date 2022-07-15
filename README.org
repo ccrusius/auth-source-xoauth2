@@ -42,7 +42,7 @@ Disclaimer: This is not an officially supported Google product.
 * Debugging
 
 If things are not working, the first thing to do is probably to try
-and get a refresh token manually. This can be done with =curl= as
+and get an access token manually. This can be done with =curl= as
 follows (replace the values with your particular ones, and remember to
 quote whatever needs quoting):
 
@@ -51,7 +51,7 @@ curl -X POST \
   '<token-url>&client_id=<client-id>&client_secret=<client-secret>&refresh_token=<refresh-token>&grant_type=refresh_token'
 #+END_SRC
 
-This should get you a reply that includes an access token. If it
+This should get you a reply that includes the access token. If it
 doesn't, failures will hopefully include error messages that tell you
 what to do. In the following case, you need to re-generate the refresh token:
 
