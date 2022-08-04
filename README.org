@@ -47,8 +47,13 @@ follows (replace the values with your particular ones, and remember to
 quote whatever needs quoting):
 
 #+BEGIN_SRC shell
-curl -X POST \
-  '<token-url>&client_id=<client-id>&client_secret=<client-secret>&refresh_token=<refresh-token>&grant_type=refresh_token'
+curl --request POST \
+  --url 'https://oauth2.googleapis.com/token' \
+  --header 'content-type: application/x-www-form-urlencoded' \
+  --data grant_type=refresh_token \
+  --data 'client_id=<client_id>' \
+  --data 'client_secret=<client_secret>' \
+  --data 'refresh_token=<refresh_token>'
 #+END_SRC
 
 This should get you a reply that includes the access token. If it
