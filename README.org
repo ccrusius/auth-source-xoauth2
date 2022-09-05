@@ -98,8 +98,8 @@ This should get you all the values but for the refresh token.  For that one:
    #+BEGIN_SRC shell
    cd google-oauth
    make
-   ./oauth -client_id <client id from previous steps> \
-           -client_secret <client secret from previous steps>
+   ./oauth -client-id <client id from previous steps> \
+           -client-secret <client secret from previous steps>
    #+END_SRC
 
 4. Visit the URL the tool will print on the console.  The page will ask you
