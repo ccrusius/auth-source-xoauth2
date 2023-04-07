@@ -147,7 +147,8 @@ See `auth-source-search' for details on SPEC."
     (when-let ((token-url (plist-get token :token-url))
                (client-id (plist-get token :client-id))
                (client-secret (plist-get token :client-secret))
-               (refresh-token (plist-get token :refresh-token)))
+               (refresh-token (plist-get token :refresh-token))
+               (user (or user (plist-get token :user))))
       (when-let (secret (cdr (assoc 'access_token
                                     (auth-source-xoauth2--url-post
                                      token-url
@@ -197,17 +198,18 @@ services.  If you write such a hook, please consider sending it for inclusion
 in this package."
   (add-to-list 'auth-sources 'xoauth2)
   ;; Add functionality to nnimap-login
-  (advice-add #'nnimap-login :around
-              (lambda (fn user password)
-                (if (and (eq nnimap-authenticator 'xoauth2)
-                         (nnimap-capability "AUTH=XOAUTH2")
-                         (nnimap-capability "SASL-IR"))
-                    (nnimap-command
-                     (concat "AUTHENTICATE XOAUTH2 "
-                             (base64-encode-string
-                              (concat "user=" user "\1auth=Bearer " password "\1\1")
-                              t)))
-                  (funcall fn user password))))
+  (unless (>= emacs-major-version 28)
+    (advice-add #'nnimap-login :around
+                (lambda (fn user password)
+                  (if (and (eq nnimap-authenticator 'xoauth2)
+                           (nnimap-capability "AUTH=XOAUTH2")
+                           (nnimap-capability "SASL-IR"))
+                      (nnimap-command
+                       (concat "AUTHENTICATE XOAUTH2 "
+                               (base64-encode-string
+                                (concat "user=" user "\1auth=Bearer " password "\1\1")
+                                t)))
+                    (funcall fn user password)))))
   ;; Add the functionality to smtpmail-try-auth-method
   (add-to-list 'smtpmail-auth-supported 'xoauth2)
   (cond
